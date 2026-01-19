@@ -36,6 +36,7 @@ function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, 
 
     document.getElementById('getDevicesBtn').addEventListener('click', fetchDevices);
     document.getElementById('savePatBtn').addEventListener('click', saveSettings);
+    document.getElementById('togglePatBtn').addEventListener('click', togglePatVisibility);
 
     // Display Version
     fetch('manifest.json')
@@ -44,6 +45,18 @@ function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, 
             document.getElementById('pluginVersion').textContent = data.Version;
         })
         .catch(err => console.error("Could not read manifest version", err));
+}
+
+function togglePatVisibility() {
+    var patInput = document.getElementById('pat');
+    var btn = document.getElementById('togglePatBtn');
+    if (patInput.type === "password") {
+        patInput.type = "text";
+        btn.textContent = "Hide";
+    } else {
+        patInput.type = "password";
+        btn.textContent = "Show";
+    }
 }
 
 function fetchDevices() {
@@ -62,8 +75,11 @@ function fetchDevices() {
             "Authorization": `Bearer ${pat}`
         }
     })
-        .then(response => {
-            if (!response.ok) throw new Error("Failed to fetch");
+        .then(async response => {
+            if (!response.ok) {
+                const text = await response.text();
+                throw new Error(`${response.status} ${response.statusText}: ${text}`);
+            }
             return response.json();
         })
         .then(data => {
@@ -85,6 +101,7 @@ function fetchDevices() {
         })
         .catch(err => {
             console.error(err);
+            alert("Error fetching devices:\n" + err.message);
             btn.textContent = "Error";
             setTimeout(() => {
                 btn.textContent = "Get Devices";
