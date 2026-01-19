@@ -1,0 +1,24 @@
+/* Basic SDPI CSS */
+.sdpi-wrapper {
+    padding: 10px;
+    font-family: Arial, sans-serif;
+    font-size: 9pt;
+    color: #b0b0b0;
+}
+
+.sdpi-item {
+    display: flex;
+    margin-bottom: 10px;
+    align-items: center;
+}
+
+.sdpi-item-label {
+    width: 80px;
+    text-align: right;
+    margin-right: 10px;
+}
+
+.sdpi-item-value {
+    flex: 1;
+    max-width: 200px;
+}

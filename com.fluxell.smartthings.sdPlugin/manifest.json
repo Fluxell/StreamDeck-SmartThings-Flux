@@ -1,0 +1,51 @@
+{
+    "Author":  "Fluxell",
+    "Builder":  {
+                    "Version":  "1.0.9"
+                },
+    "Category":  "SmartThings",
+    "CategoryIcon":  "icon",
+    "CodePath":  "plugin.html",
+    "Description":  "Control and monitor SmartThings devices.",
+    "Icon":  "icon",
+    "Name":  "SmartThings Flux",
+    "OS":  [
+               {
+                   "Platform":  "windows",
+                   "MinimumVersion":  "10"
+               },
+               {
+                   "Platform":  "mac",
+                   "MinimumVersion":  "10.11"
+               }
+           ],
+    "Profiles":  [
+                     {
+                         "Name":  "Default Profile",
+                         "ReadOnly":  false,
+                         "DeviceType":  0
+                     }
+                 ],
+    "PropertyInspectorPath":  "pi.html",
+    "SDKVersion":  2,
+    "Software":  {
+                     "MinimumVersion":  "5.0"
+                 },
+    "Version":  "1.0.9",
+    "Actions":  [
+                    {
+                        "Icon":  "icon",
+                        "Name":  "Device Status",
+                        "States":  [
+                                       {
+                                           "Image":  "icon",
+                                           "TitleAlignment":  "middle",
+                                           "FontSize":  16
+                                       }
+                                   ],
+                        "SupportedInMultiActions":  true,
+                        "Tooltip":  "Check device status",
+                        "UUID":  "com.fluxell.smartthings.status"
+                    }
+                ]
+}

@@ -1,0 +1,12 @@
+{
+    "name": "smartthings-flux-test",
+    "version": "1.0.0",
+    "description": "Test scripts for SmartThings StreamDeck Plugin",
+    "main": "test/api_test.js",
+    "scripts": {
+        "test": "node test/api_test.js"
+    },
+    "dependencies": {
+        "dotenv": "^16.0.0"
+    }
+}
