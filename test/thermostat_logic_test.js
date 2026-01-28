@@ -1,15 +1,31 @@
-const fs = require('fs');
-const path = require('path');
 const assert = require('assert');
-
-// Mock Data Path
-const DATA_FILE = path.join(__dirname, '../data/thelma_status.json');
 
 console.log("Running Thermostat Logic Test...");
 
-// 1. Load Real Data
-const data = JSON.parse(fs.readFileSync(DATA_FILE, 'utf8'));
-const main = data.components.main;
+// 1. Mock Data (Generic Thermostat)
+const mockData = {
+    components: {
+        main: {
+            thermostatMode: {
+                thermostatMode: { value: "heat" }
+            },
+            temperatureMeasurement: {
+                temperature: { value: 70 }
+            },
+            thermostatHeatingSetpoint: {
+                heatingSetpoint: { value: 70 }
+            },
+            thermostatCoolingSetpoint: {
+                coolingSetpoint: { value: 75 }
+            }
+        }
+    }
+};
+
+// Fix initial mock data to verify "heat" logic first
+mockData.components.main.thermostatMode.thermostatMode.value = "heat";
+
+const main = mockData.components.main;
 
 // Logic to test (mimicking plugin.js)
 let status = "Unknown";
@@ -48,7 +64,7 @@ if (isThermostat) {
     }
 }
 
-// Assertions for Real Data
+// Assertions for Heat
 console.log(`Detected Mode: ${thermostatMode}`);
 console.log(`Detected Status (Temp): ${status}`);
 console.log(`Detected Setpoint (SubText): ${subText}`);
@@ -61,9 +77,9 @@ try {
     assert.strictEqual(heatingSetpoint, 70, "Heating Setpoint should be 70");
     assert.strictEqual(subText, "70°", "Sub Text should be 70°");
     assert.strictEqual(color, "#FF0000", "Color should be Red (#FF0000)");
-    console.log("PASS: Real Data Test");
+    console.log("PASS: Heat Mode Test");
 } catch (e) {
-    console.error("FAIL: Real Data Test", e.message);
+    console.error("FAIL: Heat Mode Test", e.message);
     process.exit(1);
 }
 

@@ -8,7 +8,8 @@ if (!PAT || !DEVICE_ID) {
     process.exit(1);
 }
 
-console.log(`Resolving device: ${DEVICE_ID}...`);
+
+console.log(`Resolving device with ID/Label from env...`);
 
 async function checkStatus() {
     try {
