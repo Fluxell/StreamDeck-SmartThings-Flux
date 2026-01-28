@@ -3,3 +3,4 @@ node_modules
 *.sdPlugin
 !com.fluxell.smartthings.sdPlugin
 *.streamDeckPlugin
+data/*
