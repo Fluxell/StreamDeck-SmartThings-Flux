@@ -1,0 +1,78 @@
+{
+    "deviceId": "b8d3370a-35e1-4a8f-b665-9efe84643d91",
+    "name": "v4 - ecobee Thermostat - Heat and Cool (F)",
+    "label": "Thelma",
+    "manufacturerName": "0A0b",
+    "presentationId": "ST_5334da38-8076-4b40-9f6c-ac3fccaa5d24",
+    "deviceManufacturerCode": "ecobee",
+    "locationId": "9bbd8670-f3d7-4b24-890c-6a2e998d4f4a",
+    "ownerId": "c1c77d9e-aabe-0e88-8911-7aa82f1306f7",
+    "roomId": "d5c869ee-0461-4cf7-a4fa-c7462e4375d5",
+    "components": [
+        {
+            "id": "main",
+            "label": "main",
+            "capabilities": [
+                {
+                    "id": "temperatureMeasurement",
+                    "version": 1
+                },
+                {
+                    "id": "relativeHumidityMeasurement",
+                    "version": 1
+                },
+                {
+                    "id": "thermostatHeatingSetpoint",
+                    "version": 1
+                },
+                {
+                    "id": "thermostatCoolingSetpoint",
+                    "version": 1
+                },
+                {
+                    "id": "thermostatOperatingState",
+                    "version": 1
+                },
+                {
+                    "id": "thermostatMode",
+                    "version": 1
+                },
+                {
+                    "id": "thermostatFanMode",
+                    "version": 1
+                },
+                {
+                    "id": "refresh",
+                    "version": 1
+                },
+                {
+                    "id": "healthCheck",
+                    "version": 1
+                }
+            ],
+            "categories": [
+                {
+                    "name": "Thermostat",
+                    "categoryType": "manufacturer"
+                }
+            ],
+            "optional": false
+        }
+    ],
+    "createTime": "2025-09-23T17:30:27.483Z",
+    "profile": {
+        "id": "234d537d-d388-497f-b0f4-2e25025119ba"
+    },
+    "viper": {
+        "manufacturerName": "ecobee",
+        "modelName": "aresSmart-thermostat",
+        "swVersion": "260127171535",
+        "hwVersion": "260127171535",
+        "endpointAppId": "viper_92ccdcc0-4184-11eb-b9c5-036180216747"
+    },
+    "type": "VIPER",
+    "restrictionTier": 0,
+    "allowed": null,
+    "executionContext": "CLOUD",
+    "relationships": []
+}
