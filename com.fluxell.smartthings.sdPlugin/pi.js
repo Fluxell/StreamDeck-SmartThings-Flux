@@ -14,9 +14,15 @@ function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, 
         };
         websocket.send(JSON.stringify(json));
 
-        // Restore settings
+        // Request Global Settings
+        var globalJson = {
+            "event": "getGlobalSettings",
+            "context": uuid
+        };
+        websocket.send(JSON.stringify(globalJson));
+
+        // Restore local settings
         if (actionInfo.payload.settings) {
-            document.getElementById('pat').value = actionInfo.payload.settings.pat || "";
             document.getElementById('refreshInterval').value = actionInfo.payload.settings.refreshInterval || "5";
             // We might have a saved deviceID but no list yet.
             // We'll store it in the hidden input or just rely on the user to fetch again if missing.
@@ -26,10 +32,22 @@ function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, 
                 // Add a temporary option so it shows up
                 let select = document.getElementById('deviceSelect');
                 let option = document.createElement("option");
-                option.text = savedDeviceId; // We don't have the name yet
+                option.text = savedDeviceId; // Name not available yet
                 option.value = savedDeviceId;
                 option.selected = true;
                 select.add(option);
+            }
+        }
+    };
+
+    websocket.onmessage = function (evt) {
+        var jsonObj = JSON.parse(evt.data);
+        var event = jsonObj['event'];
+        var payload = jsonObj['payload'];
+
+        if (event == "didReceiveGlobalSettings") {
+            if (payload.settings && payload.settings.pat) {
+                document.getElementById('pat').value = payload.settings.pat;
             }
         }
     };
@@ -50,12 +68,17 @@ function connectElgatoStreamDeckSocket(inPort, inUUID, inRegisterEvent, inInfo, 
 function togglePatVisibility() {
     var patInput = document.getElementById('pat');
     var btn = document.getElementById('togglePatBtn');
+
+    // SVGs
+    const eyeIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>`;
+    const eyeSlashIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>`;
+
     if (patInput.type === "password") {
         patInput.type = "text";
-        btn.textContent = "Hide";
+        btn.innerHTML = eyeSlashIcon;
     } else {
         patInput.type = "password";
-        btn.textContent = "Show";
+        btn.innerHTML = eyeIcon;
     }
 }
 
@@ -95,6 +118,11 @@ function fetchDevices() {
                     option.value = device.deviceId;
                     select.add(option);
                 });
+
+                // Reselect if we have one saved
+                if (actionInfo.payload.settings && actionInfo.payload.settings.deviceId) {
+                    select.value = actionInfo.payload.settings.deviceId;
+                }
             }
             btn.textContent = "Get Devices";
             btn.disabled = false;
@@ -116,14 +144,24 @@ function saveSettings() {
     var deviceId = deviceSelect.value;
     var refreshInterval = document.getElementById('refreshInterval').value;
 
+    // Save Local Settings
     var json = {
         "event": "setSettings",
         "context": uuid,
         "payload": {
-            "pat": pat,
             "deviceId": deviceId,
             "refreshInterval": refreshInterval
         }
     };
     websocket.send(JSON.stringify(json));
+
+    // Save Global Settings (PAT)
+    var globalJson = {
+        "event": "setGlobalSettings",
+        "context": uuid,
+        "payload": {
+            "pat": pat
+        }
+    };
+    websocket.send(JSON.stringify(globalJson));
 }

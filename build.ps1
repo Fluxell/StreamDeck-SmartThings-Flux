@@ -1,6 +1,10 @@
 $manifestPath = ".\com.fluxell.smartthings.sdPlugin\manifest.json"
 $pluginName = "com.fluxell.smartthings.sdPlugin"
-$outputPath = ".\com.fluxell.smartthings.streamDeckPlugin"
+$distDir = ".\dist"
+if (!(Test-Path $distDir)) {
+    New-Item -ItemType Directory -Force -Path $distDir
+}
+$outputPath = "$distDir\com.fluxell.smartthings.streamDeckPlugin"
 
 if (!(Test-Path $manifestPath)) {
     Write-Error "Manifest not found at $manifestPath"
@@ -32,7 +36,12 @@ if (Test-Path $tempZip) {
     Remove-Item $tempZip
 }
 
+
+if (Test-Path $outputPath) {
+    Remove-Item $outputPath
+}
+
 Compress-Archive -Path $pluginName -DestinationPath $tempZip
-Rename-Item -Path $tempZip -NewName $outputPath
+Move-Item -Path $tempZip -Destination $outputPath -Force
 
 Write-Host "Build complete: $outputPath"

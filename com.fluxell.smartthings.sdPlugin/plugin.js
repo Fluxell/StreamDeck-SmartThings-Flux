@@ -1,6 +1,6 @@
 var websocket = null;
 var pluginUUID = null;
-var settings = {};
+var globalSettings = {};
 var context = null;
 
 var DestinationEnum = Object.freeze({ HARDWARE_AND_SOFTWARE: 0, HARDWARE_ONLY: 1, SOFTWARE_ONLY: 2 });
@@ -23,6 +23,13 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
 
     websocket.onopen = function () {
         registerPlugin(pluginUUID);
+
+        // Request Global Settings on startup
+        var globalJson = {
+            "event": "getGlobalSettings",
+            "context": pluginUUID
+        };
+        websocket.send(JSON.stringify(globalJson));
     };
 
     websocket.onmessage = function (evt) {
@@ -43,6 +50,10 @@ function connectElgatoStreamDeckSocket(inPort, inPluginUUID, inRegisterEvent, in
             settings = jsonPayload['settings'];
             fetchStatus(context, settings);
             updateTimer(context, settings);
+        } else if (event == "didReceiveGlobalSettings") {
+            globalSettings = jsonPayload['settings'];
+            // We should probably refresh active contexts if we have them, 
+            // but for now the timers will pick it up on next tick or keypress.
         }
     };
 
@@ -66,8 +77,10 @@ function updateTimer(context, settings) {
 
 
 function fetchStatus(context, settings) {
-    if (!settings.pat || !settings.deviceId) {
-        setTitle(context, "Setup Required");
+    var pat = globalSettings.pat || settings.pat; // Fallback to local if migrating or testing
+
+    if (!pat || !settings.deviceId) {
+        setTitle(context, "Setup Req");
         return;
     }
 
@@ -75,7 +88,7 @@ function fetchStatus(context, settings) {
 
     fetch(url, {
         headers: {
-            "Authorization": `Bearer ${settings.pat}`
+            "Authorization": `Bearer ${pat}`
         }
     })
         .then(response => {
@@ -85,31 +98,64 @@ function fetchStatus(context, settings) {
             return response.json();
         })
         .then(data => {
-            // Simple logic to find "switch" or "contactSensor" status
             // SmartThings status is complex, looking for main component
             let main = data.components.main;
             let status = "Unknown";
+            let isThermostat = false;
+            let thermostatMode = null;
+            let heatingSetpoint = null;
+            let coolingSetpoint = null;
 
-            if (main.switch) {
+            if (main.thermostatMode && main.temperatureMeasurement) {
+                isThermostat = true;
+                thermostatMode = main.thermostatMode.thermostatMode.value;
+                let temp = main.temperatureMeasurement.temperature.value;
+                status = `${temp}°`;
+
+                if (main.thermostatHeatingSetpoint) {
+                    heatingSetpoint = main.thermostatHeatingSetpoint.heatingSetpoint.value;
+                }
+                if (main.thermostatCoolingSetpoint) {
+                    coolingSetpoint = main.thermostatCoolingSetpoint.coolingSetpoint.value;
+                }
+            } else if (main.switch) {
                 status = main.switch.switch.value;
+                // Capitalize for switch
+                status = status.charAt(0).toUpperCase() + status.slice(1);
             } else if (main.contactSensor) {
                 status = main.contactSensor.contact.value;
+                status = status.charAt(0).toUpperCase() + status.slice(1);
             } else if (main.doorControl) {
                 status = main.doorControl.door.value;
+                status = status.charAt(0).toUpperCase() + status.slice(1);
             }
 
-            // Capitalize
-            status = status.charAt(0).toUpperCase() + status.slice(1);
-            setTitle(context, status);
-
             // Update Image
-            if (status.toLowerCase() === "on") {
-                setImage(context, "on.png");
-            } else if (status.toLowerCase() === "off") {
-                setImage(context, "off.png");
+            if (isThermostat) {
+                let color = "#D3D3D3"; // Default light grey
+                let subText = "";
+
+                if (thermostatMode === 'heat') {
+                    color = "#FF0000"; // Bright Red
+                    if (heatingSetpoint) subText = `${heatingSetpoint}°`;
+                } else if (thermostatMode === 'cool') {
+                    color = "#0000FF"; // Medium Blue
+                    if (coolingSetpoint) subText = `${coolingSetpoint}°`;
+                }
+
+                // Clear title so it doesn't overlap canvas text
+                setTitle(context, "");
+                renderThermostat(context, color, status, subText);
             } else {
-                // Revert to default icon if unknown or other state
-                setImage(context, "icon.png");
+                setTitle(context, status);
+                if (status.toLowerCase() === "on") {
+                    setImage(context, "on.png");
+                } else if (status.toLowerCase() === "off") {
+                    setImage(context, "off.png");
+                } else {
+                    // Revert to default icon if unknown or other state
+                    setImage(context, "icon.png");
+                }
             }
 
         })
@@ -117,6 +163,70 @@ function fetchStatus(context, settings) {
             console.error("Error fetching status:", error);
             setTitle(context, "Error");
         });
+}
+
+function renderThermostat(context, color, mainText, subText) {
+    if (websocket) {
+        var canvas = document.createElement('canvas');
+        canvas.width = 144;
+        canvas.height = 144;
+        var ctx = canvas.getContext('2d');
+
+        // Background
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        // Text
+        ctx.fillStyle = "white";
+        ctx.textAlign = "center";
+
+        // Main Text (Current Temp)
+        ctx.font = "bold 50px Arial";
+        // If subtext exists, move main text up slightly
+        let mainY = subText ? 80 : 90;
+        ctx.fillText(mainText, canvas.width / 2, mainY);
+
+        // Sub Text (Setpoint)
+        if (subText) {
+            ctx.font = "30px Arial";
+            ctx.fillText(subText, canvas.width / 2, 120);
+        }
+
+        var dataURL = canvas.toDataURL('image/png');
+
+        var json = {
+            "event": "setImage",
+            "context": context,
+            "payload": {
+                "image": dataURL,
+                "target": DestinationEnum.HARDWARE_AND_SOFTWARE
+            }
+        };
+        websocket.send(JSON.stringify(json));
+    }
+}
+
+function sendColor(context, color) {
+    if (websocket) {
+        var canvas = document.createElement('canvas');
+        canvas.width = 144;
+        canvas.height = 144;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = color;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+        var dataURL = canvas.toDataURL('image/png');
+
+        var json = {
+            "event": "setImage",
+            "context": context,
+            "payload": {
+                "image": dataURL,
+                "target": DestinationEnum.HARDWARE_AND_SOFTWARE
+            }
+        };
+        websocket.send(JSON.stringify(json));
+    }
 }
 
 function setTitle(context, title) {

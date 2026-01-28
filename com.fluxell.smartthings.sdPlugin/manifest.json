@@ -1,7 +1,7 @@
 {
     "Author":  "Fluxell",
     "Builder":  {
-                    "Version":  "1.0.11"
+                    "Version":  "1.0.16"
                 },
     "Category":  "SmartThings",
     "CategoryIcon":  "icon",
@@ -31,7 +31,7 @@
     "Software":  {
                      "MinimumVersion":  "5.0"
                  },
-    "Version":  "1.0.11",
+    "Version":  "1.0.16",
     "Actions":  [
                     {
                         "Icon":  "icon",
